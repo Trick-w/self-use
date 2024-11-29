@@ -1,5 +1,6 @@
 #列表 insert append pop del
 jiabin = ['j1','j2','j3']
+print(len(jiabin))
 message = ('hello,'+jiabin[0]+' wellcome to my home'+'.')
 print(message)
 message = ('hello,'+jiabin[1]+' wellcome to my home'+'.')
