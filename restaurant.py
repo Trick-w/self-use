@@ -1,12 +1,20 @@
 class Restaurant:
-    def __init__(self, restaurant_name, cuisine_type):
+    def __init__(self, restaurant_name, cuisine_type, number_served=0):
         self.restaurant_name = restaurant_name
         self.cuisine_type = cuisine_type
+        self.number_served = number_served
+
+    def set_number_served(self, number_served):
+        self.number_served = number_served
+    
+    def increment_number_served(self, number_served):
+        self.number_served += number_served
 
     def describe_restaurant(self):
         print(f"餐馆名称: {self.restaurant_name}")
         print(f"菜系类型: {self.cuisine_type}")
-
+        print(f"就餐人数: {self.number_served}")
+        
     def open_restaurant(self):
         print(f"{self.restaurant_name} 正在营业")
 
@@ -18,10 +26,9 @@ restaurant.describe_restaurant()
 restaurant.open_restaurant()
 
 # 创建三个 restaurant 实例
-restaurant1 = Restaurant("川菜馆", "川菜")
-restaurant2 = Restaurant("粤菜馆", "粤菜")
-restaurant3 = Restaurant("湘菜馆", "湘菜")
+restaurant1 = Restaurant("川菜馆", "川菜","13")
 
+restaurant1.number_served = 10
+restaurant1.increment_number_served(10)
+restaurant1.increment_number_served(10)
 restaurant1.describe_restaurant()
-restaurant2.describe_restaurant()
-restaurant3.describe_restaurant()
