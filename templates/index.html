@@ -13,6 +13,7 @@
             background: linear-gradient(to right, #ff758c, #ff7eb3);
             margin: 0;
             font-family: 'Arial', sans-serif;
+            overflow: hidden;
         }
         .heart {
             position: relative;
@@ -46,6 +47,7 @@
             transform: translate(-50%, -50%);
             color: white;
             text-align: center;
+            animation: glow 1s ease-in-out infinite alternate;
         }
         .message h1 {
             font-size: 2.5em;
@@ -53,6 +55,22 @@
         }
         .message p {
             font-size: 1.2em;
+        }
+        .fireworks, .hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 30px #ff00ff, 0 0 40px #ff00ff, 0 0 50px #ff00ff, 0 0 60px #ff00ff, 0 0 70px #ff00ff;
+            }
+            to {
+                text-shadow: 0 0 20px #fff, 0 0 30px #ff00ff, 0 0 40px #ff00ff, 0 0 50px #ff00ff, 0 0 60px #ff00ff, 0 0 70px #ff00ff, 0 0 80px #ff00ff;
+            }
         }
     </style>
 </head>
@@ -62,6 +80,204 @@
         <h1>宝宝</h1>
         <h1>我爱你</h1>
         <p>你是世界上最可爱的女孩</p>
+        <p>你是我生命中的阳光</p>
+        <p>我愿意永远陪伴在你身边</p>
     </div>
+    <canvas class="fireworks"></canvas>
+    <canvas class="hearts"></canvas>
+    <script>
+        // 烟花特效脚本
+        const canvas = document.querySelector('.fireworks');
+        const ctx = canvas.getContext('2d');
+        let width, height, fireworks = [];
+
+        function setup() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function Firework(x, y, targetX, targetY) {
+            this.x = x;
+            this.y = y;
+            this.targetX = targetX;
+            this.targetY = targetY;
+            this.distanceToTarget = Math.sqrt((targetX - x) ** 2 + (targetY - y) ** 2);
+            this.distanceTraveled = 0;
+            this.coordinates = [];
+            this.coordinateCount = 3;
+            while (this.coordinateCount--) {
+                this.coordinates.push([this.x, this.y]);
+            }
+            this.angle = Math.atan2(targetY - y, targetX - x);
+            this.speed = 2;
+            this.acceleration = 1.05;
+            this.brightness = Math.random() * 50 + 50;
+            this.targetRadius = 1;
+        }
+
+        Firework.prototype.update = function(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+            if (this.targetRadius < 8) {
+                this.targetRadius += 0.3;
+            } else {
+                this.targetRadius = 1;
+            }
+            this.speed *= this.acceleration;
+            const vx = Math.cos(this.angle) * this.speed;
+            const vy = Math.sin(this.angle) * this.speed;
+            this.distanceTraveled = Math.sqrt((this.x + vx - this.x) ** 2 + (this.y + vy - this.y) ** 2);
+            if (this.distanceTraveled >= this.distanceToTarget) {
+                createParticles(this.targetX, this.targetY);
+                fireworks.splice(index, 1);
+            } else {
+                this.x += vx;
+                this.y += vy;
+            }
+        };
+
+        Firework.prototype.draw = function() {
+            ctx.beginPath();
+            ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y);
+            ctx.strokeStyle = `hsl(${Math.random() * 360}, 100%, ${this.brightness}%)`;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(this.targetX, this.targetY, this.targetRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        };
+
+        function createParticles(x, y) {
+            let particleCount = 30;
+            while (particleCount--) {
+                fireworks.push(new Particle(x, y));
+            }
+        }
+
+        function Particle(x, y) {
+            this.x = x;
+            this.y = y;
+            this.coordinates = [];
+            this.coordinateCount = 5;
+            while (this.coordinateCount--) {
+                this.coordinates.push([this.x, this.y]);
+            }
+            this.angle = Math.random() * Math.PI * 2;
+            this.speed = Math.random() * 10 + 1;
+            this.friction = 0.95;
+            this.gravity = 1;
+            this.hue = Math.random() * 360;
+            this.brightness = Math.random() * 50 + 50;
+            this.alpha = 1;
+            this.decay = Math.random() * 0.03 + 0.01;
+        }
+
+        Particle.prototype.update = function(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+            this.speed *= this.friction;
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed + this.gravity;
+            this.alpha -= this.decay;
+            if (this.alpha <= this.decay) {
+                fireworks.splice(index, 1);
+            }
+        };
+
+        Particle.prototype.draw = function() {
+            ctx.beginPath();
+            ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y);
+            ctx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+            ctx.stroke();
+        };
+
+        function loop() {
+            requestAnimationFrame(loop);
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.globalCompositeOperation = 'lighter';
+            let i = fireworks.length;
+            while (i--) {
+                fireworks[i].draw();
+                fireworks[i].update(i);
+            }
+        }
+
+        function createFirework(x, y) {
+            fireworks.push(new Firework(width / 2, height, x, y));
+        }
+
+        canvas.addEventListener('click', (e) => {
+            createFirework(e.clientX, e.clientY);
+        });
+
+        window.onload = setup;
+        window.onresize = setup;
+        loop();
+
+        // 爱心粒子效果脚本
+        const heartsCanvas = document.querySelector('.hearts');
+        const heartsCtx = heartsCanvas.getContext('2d');
+        let hearts = [];
+
+        function setupHearts() {
+            heartsCanvas.width = window.innerWidth;
+            heartsCanvas.height = window.innerHeight;
+        }
+
+        function Heart(x, y) {
+            this.x = x;
+            this.y = y;
+            this.size = Math.random() * 20 + 10;
+            this.speedY = Math.random() * 1 + 0.5;
+            this.alpha = Math.random() * 0.5 + 0.5;
+        }
+
+        Heart.prototype.update = function() {
+            this.y -= this.speedY;
+            if (this.y < -this.size) {
+                this.y = heartsCanvas.height + this.size;
+            }
+        };
+
+        Heart.prototype.draw = function() {
+            heartsCtx.globalAlpha = this.alpha;
+            heartsCtx.beginPath();
+            heartsCtx.moveTo(this.x, this.y);
+            heartsCtx.bezierCurveTo(this.x + this.size / 2, this.y - this.size / 2, this.x + this.size, this.y + this.size / 3, this.x, this.y + this.size);
+            heartsCtx.bezierCurveTo(this.x - this.size, this.y + this.size / 3, this.x - this.size / 2, this.y - this.size / 2, this.x, this.y);
+            heartsCtx.fillStyle = 'red';
+            heartsCtx.fill();
+        };
+
+        function loopHearts() {
+            requestAnimationFrame(loopHearts);
+            heartsCtx.clearRect(0, 0, heartsCanvas.width, heartsCanvas.height);
+            hearts.forEach((heart, index) => {
+                heart.update();
+                heart.draw();
+            });
+        }
+
+        function createHearts() {
+            for (let i = 0; i < 100; i++) {
+                hearts.push(new Heart(Math.random() * heartsCanvas.width, Math.random() * heartsCanvas.height));
+            }
+        }
+
+        window.onload = () => {
+            setup();
+            setupHearts();
+            createHearts();
+            loop();
+            loopHearts();
+        };
+        window.onresize = () => {
+            setup();
+            setupHearts();
+        };
+    </script>
 </body>
 </html>
